@@ -14,7 +14,7 @@ def test_cli_version_outputs_package_version() -> None:
     """Confirm the CLI exposes a stable version flag."""
     result = CliRunner().invoke(cli, ["--version"])
     assert result.exit_code == 0
-    assert "0.3.0" in result.output
+    assert "0.4.0" in result.output
 
 
 def test_cli_base64_encode_command_outputs_encoded_text() -> None:
@@ -139,3 +139,63 @@ def test_cli_hash_verify_fails_for_mismatched_digest() -> None:
 
     assert result.exit_code != 0
     assert "Checksum mismatch" in result.output
+
+
+def test_cli_json_format_outputs_pretty_json() -> None:
+    """Confirm JSON format command prints formatted JSON."""
+    result = CliRunner().invoke(cli, ["json", "format", '{"b":2,"a":1}'])
+    assert result.exit_code == 0
+    assert result.output.strip() == '{\n  "a": 1,\n  "b": 2\n}'
+
+
+def test_cli_json_minify_outputs_compact_json() -> None:
+    """Confirm JSON minify command prints compact JSON."""
+    result = CliRunner().invoke(cli, ["json", "minify", '{ "b": 2, "a": 1 }'])
+    assert result.exit_code == 0
+    assert result.output.strip() == '{"a":1,"b":2}'
+
+
+def test_cli_json_validate_outputs_ok() -> None:
+    """Confirm JSON validate command prints OK for valid JSON."""
+    result = CliRunner().invoke(cli, ["json", "validate", '{"a":1}'])
+    assert result.exit_code == 0
+    assert result.output.strip() == "OK"
+
+
+def test_cli_json_validate_reports_invalid_json() -> None:
+    """Confirm JSON validate command reports parse errors."""
+    result = CliRunner().invoke(cli, ["json", "validate", '{"a":}'])
+    assert result.exit_code != 0
+    assert "Invalid JSON" in result.output
+
+
+def test_cli_json_format_reads_and_writes_files() -> None:
+    """Confirm JSON format can read and write files."""
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        with open("input.json", "w", encoding="utf-8") as input_file:
+            input_file.write('{"b":2,"a":1}')
+
+        result = runner.invoke(
+            cli,
+            [
+                "json",
+                "format",
+                "--input-file",
+                "input.json",
+                "--output-file",
+                "output.json",
+            ],
+        )
+        with open("output.json", encoding="utf-8") as output_file:
+            formatted_json = output_file.read()
+
+    assert result.exit_code == 0
+    assert formatted_json == '{\n  "a": 1,\n  "b": 2\n}'
+
+
+def test_cli_json_format_rejects_missing_input() -> None:
+    """Confirm JSON format reports a usage error when no input is provided."""
+    result = CliRunner().invoke(cli, ["json", "format"])
+    assert result.exit_code != 0
+    assert "Provide TEXT or --input-file" in result.output

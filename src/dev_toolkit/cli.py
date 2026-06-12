@@ -19,12 +19,14 @@ from dev_toolkit.services.base64_service import (
     encode_base64_bytes,
 )
 from dev_toolkit.services.hash_service import hash_file, hash_text, verify_checksum
+from dev_toolkit.services.json_service import format_json, minify_json, validate_json
 from dev_toolkit.services.password_service import generate_password
 from dev_toolkit.services.timestamp_service import convert_timestamp
 from dev_toolkit.services.uuid_service import generate_uuid
 
 logger = logging.getLogger(__name__)
 HASH_ALGORITHM_ARGUMENT = click.Choice(["sha256", "sha512"], case_sensitive=False)
+JSON_INDENT_RANGE = click.IntRange(min=0, max=8)
 
 
 @click.group()
@@ -206,6 +208,99 @@ def hash_verify_command(
     raise click.ClickException(f"Checksum mismatch. Actual digest: {actual_digest}")
 
 
+@cli.group("json")
+def json_group() -> None:
+    """Format, minify, or validate JSON text."""
+
+
+@json_group.command("format")
+@click.argument("text", required=False)
+@click.option(
+    "--input-file",
+    "-i",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="Read JSON from a file instead of the text argument.",
+)
+@click.option(
+    "--output-file",
+    "-o",
+    type=click.Path(dir_okay=False, writable=True, path_type=Path),
+    help="Write formatted JSON to a file instead of stdout.",
+)
+@click.option(
+    "--indent",
+    default=2,
+    show_default=True,
+    type=JSON_INDENT_RANGE,
+    help="Number of spaces for formatted output.",
+)
+def json_format_command(
+    text: str | None,
+    input_file: Path | None,
+    output_file: Path | None,
+    indent: int,
+) -> None:
+    """Format JSON from direct text or a file."""
+    logger.info("Formatting JSON")
+    source_text = read_text_argument_or_file(text, input_file)
+    try:
+        formatted_json = format_json(source_text, indent=indent)
+    except ValueError as error:
+        raise click.ClickException(str(error)) from error
+
+    write_text_or_echo(formatted_json, output_file)
+
+
+@json_group.command("minify")
+@click.argument("text", required=False)
+@click.option(
+    "--input-file",
+    "-i",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="Read JSON from a file instead of the text argument.",
+)
+@click.option(
+    "--output-file",
+    "-o",
+    type=click.Path(dir_okay=False, writable=True, path_type=Path),
+    help="Write minified JSON to a file instead of stdout.",
+)
+def json_minify_command(
+    text: str | None,
+    input_file: Path | None,
+    output_file: Path | None,
+) -> None:
+    """Minify JSON from direct text or a file."""
+    logger.info("Minifying JSON")
+    source_text = read_text_argument_or_file(text, input_file)
+    try:
+        minified_json = minify_json(source_text)
+    except ValueError as error:
+        raise click.ClickException(str(error)) from error
+
+    write_text_or_echo(minified_json, output_file)
+
+
+@json_group.command("validate")
+@click.argument("text", required=False)
+@click.option(
+    "--input-file",
+    "-i",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="Read JSON from a file instead of the text argument.",
+)
+def json_validate_command(text: str | None, input_file: Path | None) -> None:
+    """Validate JSON from direct text or a file."""
+    logger.info("Validating JSON")
+    source_text = read_text_argument_or_file(text, input_file)
+    try:
+        validate_json(source_text)
+    except ValueError as error:
+        raise click.ClickException(str(error)) from error
+
+    click.echo("OK")
+
+
 @cli.command("timestamp")
 @click.argument("value")
 def timestamp_command(value: str) -> None:
@@ -215,6 +310,48 @@ def timestamp_command(value: str) -> None:
         click.echo(convert_timestamp(value))
     except ValueError as error:
         raise click.ClickException(str(error)) from error
+
+
+def read_text_argument_or_file(text: str | None, input_file: Path | None) -> str:
+    """Read text from either a direct argument or an input file.
+
+    Parameters:
+        text: Optional direct text argument.
+        input_file: Optional path to read.
+
+    Returns:
+        Text read from the selected source.
+
+    Raises:
+        click.UsageError: If the source selection is invalid.
+    """
+    if text is None and input_file is None:
+        raise click.UsageError("Provide TEXT or --input-file.")
+
+    if text is not None and input_file is not None:
+        raise click.UsageError("Use either TEXT or --input-file, not both.")
+
+    if input_file is not None:
+        return input_file.read_text(encoding="utf-8")
+
+    return text or ""
+
+
+def write_text_or_echo(text: str, output_file: Path | None) -> None:
+    """Write text to an output file or stdout.
+
+    Parameters:
+        text: Text to write.
+        output_file: Optional output file path.
+
+    Returns:
+        None.
+    """
+    if output_file is not None:
+        output_file.write_text(text, encoding="utf-8")
+        return
+
+    click.echo(text)
 
 
 if __name__ == "__main__":

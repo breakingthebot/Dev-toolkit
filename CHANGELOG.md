@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2026-06-12
+
+### Added
+
+- Add `dev-toolkit json format` for pretty-printing JSON.
+- Add `dev-toolkit json minify` for compact JSON output.
+- Add `dev-toolkit json validate` for JSON syntax validation.
+- Add file input and output support for JSON formatting and minification.
+- Add JSON service and CLI tests.
+
 ## [0.3.0] - 2026-06-12
 
 ### Added
