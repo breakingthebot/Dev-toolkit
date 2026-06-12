@@ -14,7 +14,7 @@ def test_cli_version_outputs_package_version() -> None:
     """Confirm the CLI exposes a stable version flag."""
     result = CliRunner().invoke(cli, ["--version"])
     assert result.exit_code == 0
-    assert "0.2.0" in result.output
+    assert "0.3.0" in result.output
 
 
 def test_cli_base64_encode_command_outputs_encoded_text() -> None:
@@ -89,3 +89,53 @@ def test_cli_base64_encode_rejects_missing_input() -> None:
     result = CliRunner().invoke(cli, ["base64", "encode"])
     assert result.exit_code != 0
     assert "Provide TEXT or --input-file" in result.output
+
+
+def test_cli_hash_text_outputs_sha256_digest() -> None:
+    """Confirm hash text command prints a SHA-256 digest."""
+    result = CliRunner().invoke(cli, ["hash", "text", "sha256", "hello"])
+    assert result.exit_code == 0
+    assert (
+        result.output.strip()
+        == "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+    )
+
+
+def test_cli_hash_file_outputs_sha512_digest() -> None:
+    """Confirm hash file command prints a SHA-512 digest."""
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        with open("plain.txt", "w", encoding="utf-8") as input_file:
+            input_file.write("hello")
+
+        result = runner.invoke(cli, ["hash", "file", "sha512", "plain.txt"])
+
+    assert result.exit_code == 0
+    assert result.output.strip().startswith("9b71d224bd62f378")
+
+
+def test_cli_hash_verify_outputs_ok_for_matching_digest() -> None:
+    """Confirm hash verify command succeeds when the checksum matches."""
+    runner = CliRunner()
+    digest = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+    with runner.isolated_filesystem():
+        with open("plain.txt", "w", encoding="utf-8") as input_file:
+            input_file.write("hello")
+
+        result = runner.invoke(cli, ["hash", "verify", "sha256", digest, "plain.txt"])
+
+    assert result.exit_code == 0
+    assert result.output.strip() == "OK"
+
+
+def test_cli_hash_verify_fails_for_mismatched_digest() -> None:
+    """Confirm hash verify command fails when the checksum mismatches."""
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        with open("plain.txt", "w", encoding="utf-8") as input_file:
+            input_file.write("hello")
+
+        result = runner.invoke(cli, ["hash", "verify", "sha256", "abc123", "plain.txt"])
+
+    assert result.exit_code != 0
+    assert "Checksum mismatch" in result.output

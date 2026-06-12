@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2026-06-12
+
+### Added
+
+- Add `dev-toolkit hash text` for SHA-256 and SHA-512 text hashing.
+- Add `dev-toolkit hash file` for SHA-256 and SHA-512 file hashing.
+- Add `dev-toolkit hash verify` for checksum verification.
+- Add hash service and CLI tests.
+
 ## [0.2.0] - 2026-06-12
 
 ### Added
