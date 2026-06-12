@@ -7,7 +7,12 @@
 
 import pytest
 
-from dev_toolkit.services.base64_service import decode_base64, encode_base64
+from dev_toolkit.services.base64_service import (
+    decode_base64,
+    decode_base64_bytes,
+    encode_base64,
+    encode_base64_bytes,
+)
 
 
 def test_encode_base64_returns_expected_text() -> None:
@@ -25,3 +30,12 @@ def test_decode_base64_rejects_invalid_text() -> None:
     with pytest.raises(ValueError, match="valid base64"):
         decode_base64("not valid")
 
+
+def test_encode_base64_bytes_returns_expected_text() -> None:
+    """Confirm bytes encode to the expected base64 value."""
+    assert encode_base64_bytes(b"hello") == "aGVsbG8="
+
+
+def test_decode_base64_bytes_returns_expected_bytes() -> None:
+    """Confirm base64 text decodes to the expected bytes."""
+    assert decode_base64_bytes("aGVsbG8=") == b"hello"

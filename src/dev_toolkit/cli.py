@@ -6,12 +6,18 @@
 """Command-line interface for Dev Toolkit."""
 
 import logging
+from pathlib import Path
 
 import click
 
 from dev_toolkit import __version__
 from dev_toolkit.config.logging_config import configure_logging
-from dev_toolkit.services.base64_service import decode_base64, encode_base64
+from dev_toolkit.services.base64_service import (
+    decode_base64,
+    decode_base64_bytes,
+    encode_base64,
+    encode_base64_bytes,
+)
 from dev_toolkit.services.password_service import generate_password
 from dev_toolkit.services.timestamp_service import convert_timestamp
 from dev_toolkit.services.uuid_service import generate_uuid
@@ -58,20 +64,84 @@ def base64_group() -> None:
 
 
 @base64_group.command("encode")
-@click.argument("text")
-def base64_encode_command(text: str) -> None:
-    """Encode text as base64."""
+@click.argument("text", required=False)
+@click.option(
+    "--input-file",
+    "-i",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="Read raw input from a file instead of the text argument.",
+)
+@click.option(
+    "--output-file",
+    "-o",
+    type=click.Path(dir_okay=False, writable=True, path_type=Path),
+    help="Write encoded output to a file instead of stdout.",
+)
+def base64_encode_command(
+    text: str | None,
+    input_file: Path | None,
+    output_file: Path | None,
+) -> None:
+    """Encode text or file content as base64."""
     logger.info("Encoding base64 text")
-    click.echo(encode_base64(text))
+    if text is None and input_file is None:
+        raise click.UsageError("Provide TEXT or --input-file.")
+
+    if text is not None and input_file is not None:
+        raise click.UsageError("Use either TEXT or --input-file, not both.")
+
+    encoded_text = (
+        encode_base64_bytes(input_file.read_bytes())
+        if input_file is not None
+        else encode_base64(text or "")
+    )
+
+    if output_file is not None:
+        output_file.write_text(encoded_text, encoding="utf-8")
+        return
+
+    click.echo(encoded_text)
 
 
 @base64_group.command("decode")
-@click.argument("text")
-def base64_decode_command(text: str) -> None:
-    """Decode base64 text."""
+@click.argument("text", required=False)
+@click.option(
+    "--input-file",
+    "-i",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="Read base64 text from a file instead of the text argument.",
+)
+@click.option(
+    "--output-file",
+    "-o",
+    type=click.Path(dir_okay=False, writable=True, path_type=Path),
+    help="Write decoded bytes to a file instead of stdout.",
+)
+def base64_decode_command(
+    text: str | None,
+    input_file: Path | None,
+    output_file: Path | None,
+) -> None:
+    """Decode base64 text or file content."""
     logger.info("Decoding base64 text")
+    if text is None and input_file is None:
+        raise click.UsageError("Provide TEXT or --input-file.")
+
+    if text is not None and input_file is not None:
+        raise click.UsageError("Use either TEXT or --input-file, not both.")
+
+    source_text = (
+        input_file.read_text(encoding="utf-8")
+        if input_file is not None
+        else text or ""
+    )
+
     try:
-        click.echo(decode_base64(text))
+        if output_file is not None:
+            output_file.write_bytes(decode_base64_bytes(source_text.strip()))
+            return
+
+        click.echo(decode_base64(source_text.strip()))
     except ValueError as error:
         raise click.ClickException(str(error)) from error
 
@@ -89,4 +159,3 @@ def timestamp_command(value: str) -> None:
 
 if __name__ == "__main__":
     cli()
-

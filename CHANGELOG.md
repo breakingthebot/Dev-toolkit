@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0] - 2026-06-12
+
+### Added
+
+- Add file input and output options for `dev-toolkit base64 encode`.
+- Add file input and output options for `dev-toolkit base64 decode`.
+- Add byte-oriented base64 service helpers for file-safe encoding and decoding.
+- Add CLI tests for file-based base64 workflows and missing input validation.
+
 ## [0.1.0] - 2026-06-12
 
 ### Added
@@ -13,4 +22,3 @@ All notable changes to this project will be documented in this file.
 - Add Unix timestamp conversion command.
 - Add pytest coverage for services and CLI wiring.
 - Add README, MIT license, environment template, and project metadata.
-

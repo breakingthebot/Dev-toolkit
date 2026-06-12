@@ -20,8 +20,7 @@ def encode_base64(text: str) -> str:
     Returns:
         Base64 encoded text.
     """
-    encoded_bytes = base64.b64encode(text.encode(TEXT_ENCODING))
-    return encoded_bytes.decode(TEXT_ENCODING)
+    return encode_base64_bytes(text.encode(TEXT_ENCODING))
 
 
 def decode_base64(text: str) -> str:
@@ -37,8 +36,38 @@ def decode_base64(text: str) -> str:
         ValueError: If the input is not valid base64 or UTF-8 text.
     """
     try:
-        decoded_bytes = base64.b64decode(text.encode(TEXT_ENCODING), validate=True)
+        decoded_bytes = decode_base64_bytes(text)
         return decoded_bytes.decode(TEXT_ENCODING)
     except (binascii.Error, UnicodeDecodeError) as error:
         raise ValueError("Input must be valid base64-encoded UTF-8 text.") from error
 
+
+def encode_base64_bytes(content: bytes) -> str:
+    """Encode bytes into a base64 string.
+
+    Parameters:
+        content: Raw bytes to encode.
+
+    Returns:
+        Base64 encoded text.
+    """
+    encoded_bytes = base64.b64encode(content)
+    return encoded_bytes.decode(TEXT_ENCODING)
+
+
+def decode_base64_bytes(text: str) -> bytes:
+    """Decode a base64 string into bytes.
+
+    Parameters:
+        text: Base64 text to decode.
+
+    Returns:
+        Decoded bytes.
+
+    Raises:
+        ValueError: If the input is not valid base64 text.
+    """
+    try:
+        return base64.b64decode(text.encode(TEXT_ENCODING), validate=True)
+    except binascii.Error as error:
+        raise ValueError("Input must be valid base64 text.") from error

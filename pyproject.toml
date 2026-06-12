@@ -9,7 +9,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dev-toolkit"
-version = "0.1.0"
+version = "0.2.0"
 description = "A Click-based command-line toolkit for common developer utilities."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -33,4 +33,3 @@ dev-toolkit = "dev_toolkit.cli:cli"
 testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = "-ra"
-
