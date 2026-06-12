@@ -1,0 +1,36 @@
+# pyproject.toml
+# Defines package metadata, dependencies, CLI entry point, and pytest settings.
+# Connects to: src/dev_toolkit/cli.py, tests/
+# Created: 2026-06-12
+
+[build-system]
+requires = ["setuptools>=82.0.1", "wheel>=0.47.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dev-toolkit"
+version = "0.1.0"
+description = "A Click-based command-line toolkit for common developer utilities."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+authors = [
+  { name = "breakingthebot" }
+]
+dependencies = [
+  "click>=8.4.1"
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=9.0.3"
+]
+
+[project.scripts]
+dev-toolkit = "dev_toolkit.cli:cli"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra"
+

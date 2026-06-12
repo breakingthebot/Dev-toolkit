@@ -1,0 +1,10 @@
+{
+  "editor.formatOnSave": true,
+  "editor.tabSize": 2,
+  "python.defaultInterpreterPath": "./venv/Scripts/python.exe",
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/node_modules": true
+  }
+}
+
