@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.1] - 2026-06-17
+
+### Fixed
+
+- Configure pytest to use a repo-local `.pytest-tmp/` directory to avoid Windows temp-folder permission errors.
+- Ignore `.pytest-tmp/` in Git and document the test temp directory.
+
 ## [0.9.0] - 2026-06-17
 
 ### Added

@@ -87,6 +87,8 @@ dev-toolkit timestamp --help
 venv\Scripts\python.exe -m pytest
 ```
 
+Pytest writes temporary test files to `.pytest-tmp/` inside the repository to avoid Windows temp-folder permission issues. The folder is ignored by Git.
+
 ## Release Check
 
 Build the source distribution and wheel before tagging a release:
