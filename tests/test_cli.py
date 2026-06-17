@@ -14,7 +14,23 @@ def test_cli_version_outputs_package_version() -> None:
     """Confirm the CLI exposes a stable version flag."""
     result = CliRunner().invoke(cli, ["--version"])
     assert result.exit_code == 0
-    assert "0.5.0" in result.output
+    assert "0.6.0" in result.output
+
+
+def test_cli_help_includes_examples() -> None:
+    """Confirm top-level help includes usage examples."""
+    result = CliRunner().invoke(cli, ["--help"])
+    assert result.exit_code == 0
+    assert "Examples:" in result.output
+    assert "dev-toolkit json validate --input-file data.json" in result.output
+
+
+def test_cli_group_help_includes_examples() -> None:
+    """Confirm command group help includes practical examples."""
+    result = CliRunner().invoke(cli, ["hash", "--help"])
+    assert result.exit_code == 0
+    assert "Examples:" in result.output
+    assert "dev-toolkit hash file sha512 archive.zip" in result.output
 
 
 def test_cli_base64_encode_command_outputs_encoded_text() -> None:

@@ -35,7 +35,16 @@ JSON_INDENT_RANGE = click.IntRange(min=0, max=8)
 @click.group()
 @click.version_option(version=__version__, prog_name="dev-toolkit")
 def cli() -> None:
-    """Run developer utility commands from one terminal entry point."""
+    """Run developer utility commands from one terminal entry point.
+
+    Examples:
+
+      dev-toolkit uuid
+
+      dev-toolkit password --length 24
+
+      dev-toolkit json validate --input-file data.json
+    """
     configure_logging()
 
 
@@ -67,7 +76,16 @@ def password_command(length: int, no_symbols: bool) -> None:
 
 @cli.group("base64")
 def base64_group() -> None:
-    """Encode or decode base64 text."""
+    """Encode or decode base64 text.
+
+    Examples:
+
+      dev-toolkit base64 encode "hello"
+
+      dev-toolkit base64 decode "aGVsbG8="
+
+      dev-toolkit base64 encode --input-file plain.txt --output-file encoded.txt
+    """
 
 
 @base64_group.command("encode")
@@ -155,7 +173,16 @@ def base64_decode_command(
 
 @cli.group("hash")
 def hash_group() -> None:
-    """Calculate or verify SHA checksums."""
+    """Calculate or verify SHA checksums.
+
+    Examples:
+
+      dev-toolkit hash text sha256 "hello"
+
+      dev-toolkit hash file sha512 archive.zip
+
+      dev-toolkit hash verify sha256 "<expected-digest>" archive.zip
+    """
 
 
 @hash_group.command("text")
@@ -213,7 +240,16 @@ def hash_verify_command(
 
 @cli.group("json")
 def json_group() -> None:
-    """Format, minify, or validate JSON text."""
+    """Format, minify, or validate JSON text.
+
+    Examples:
+
+      dev-toolkit json format "{\\"b\\":2,\\"a\\":1}"
+
+      dev-toolkit json minify --input-file data.json
+
+      dev-toolkit json validate --input-file data.json
+    """
 
 
 @json_group.command("format")
@@ -317,7 +353,16 @@ def json_validate_command(text: str | None, input_file: Path | None) -> None:
     help="Return Unix milliseconds when used with --to-unix.",
 )
 def timestamp_command(value: str, to_unix: bool, milliseconds: bool) -> None:
-    """Convert between Unix timestamps and ISO 8601 UTC datetimes."""
+    """Convert between Unix timestamps and ISO 8601 UTC datetimes.
+
+    Examples:
+
+      dev-toolkit timestamp 1718064000
+
+      dev-toolkit timestamp --to-unix "2024-06-11T00:00:00+00:00"
+
+      dev-toolkit timestamp --to-unix --milliseconds "2001-09-09T01:46:40Z"
+    """
     logger.info("Converting timestamp")
     try:
         if to_unix:

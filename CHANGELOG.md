@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0] - 2026-06-17
+
+### Added
+
+- Add shell completion setup documentation for PowerShell, Bash, and Zsh.
+- Add examples to top-level CLI help and major command group help output.
+- Add CLI help tests for documented examples.
+
 ## [0.5.0] - 2026-06-17
 
 ### Added
