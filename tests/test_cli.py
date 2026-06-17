@@ -14,7 +14,7 @@ def test_cli_version_outputs_package_version() -> None:
     """Confirm the CLI exposes a stable version flag."""
     result = CliRunner().invoke(cli, ["--version"])
     assert result.exit_code == 0
-    assert "0.6.0" in result.output
+    assert "0.7.0" in result.output
 
 
 def test_cli_help_includes_examples() -> None:
@@ -162,6 +162,50 @@ def test_cli_json_format_outputs_pretty_json() -> None:
     result = CliRunner().invoke(cli, ["json", "format", '{"b":2,"a":1}'])
     assert result.exit_code == 0
     assert result.output.strip() == '{\n  "a": 1,\n  "b": 2\n}'
+
+
+def test_cli_json_format_uses_environment_indent() -> None:
+    """Confirm JSON format uses the configured default indentation."""
+    result = CliRunner().invoke(
+        cli,
+        ["json", "format", '{"a":{"b":1}}'],
+        env={"DEV_TOOLKIT_JSON_INDENT": "4"},
+    )
+    assert result.exit_code == 0
+    assert result.output.strip() == '{\n    "a": {\n        "b": 1\n    }\n}'
+
+
+def test_cli_json_format_flag_overrides_environment_indent() -> None:
+    """Confirm explicit JSON indent overrides environment defaults."""
+    result = CliRunner().invoke(
+        cli,
+        ["json", "format", "--indent", "2", '{"a":{"b":1}}'],
+        env={"DEV_TOOLKIT_JSON_INDENT": "4"},
+    )
+    assert result.exit_code == 0
+    assert result.output.strip() == '{\n  "a": {\n    "b": 1\n  }\n}'
+
+
+def test_cli_password_uses_environment_length() -> None:
+    """Confirm password command uses the configured default length."""
+    result = CliRunner().invoke(
+        cli,
+        ["password", "--no-symbols"],
+        env={"DEV_TOOLKIT_PASSWORD_LENGTH": "32"},
+    )
+    assert result.exit_code == 0
+    assert len(result.output.strip()) == 32
+
+
+def test_cli_password_flag_overrides_environment_length() -> None:
+    """Confirm explicit password length overrides environment defaults."""
+    result = CliRunner().invoke(
+        cli,
+        ["password", "--length", "12", "--no-symbols"],
+        env={"DEV_TOOLKIT_PASSWORD_LENGTH": "32"},
+    )
+    assert result.exit_code == 0
+    assert len(result.output.strip()) == 12
 
 
 def test_cli_json_minify_outputs_compact_json() -> None:

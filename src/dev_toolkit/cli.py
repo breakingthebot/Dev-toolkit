@@ -11,6 +11,12 @@ from pathlib import Path
 import click
 
 from dev_toolkit import __version__
+from dev_toolkit.config.defaults import (
+    DEFAULT_JSON_INDENT,
+    DEFAULT_PASSWORD_LENGTH,
+    get_json_indent_default,
+    get_password_length_default,
+)
 from dev_toolkit.config.logging_config import configure_logging
 from dev_toolkit.services.base64_service import (
     decode_base64,
@@ -58,8 +64,8 @@ def uuid_command() -> None:
 @cli.command("password")
 @click.option(
     "--length",
-    default=20,
-    show_default=True,
+    default=None,
+    show_default=f"{DEFAULT_PASSWORD_LENGTH} or DEV_TOOLKIT_PASSWORD_LENGTH",
     type=click.IntRange(min=8, max=128),
     help="Password length.",
 )
@@ -68,10 +74,18 @@ def uuid_command() -> None:
     is_flag=True,
     help="Exclude punctuation symbols from the generated password.",
 )
-def password_command(length: int, no_symbols: bool) -> None:
+def password_command(length: int | None, no_symbols: bool) -> None:
     """Generate and print a cryptographically secure password."""
-    logger.info("Generating password", extra={"length": length, "symbols": not no_symbols})
-    click.echo(generate_password(length=length, include_symbols=not no_symbols))
+    try:
+        resolved_length = length if length is not None else get_password_length_default()
+    except ValueError as error:
+        raise click.ClickException(str(error)) from error
+
+    logger.info(
+        "Generating password",
+        extra={"length": resolved_length, "symbols": not no_symbols},
+    )
+    click.echo(generate_password(length=resolved_length, include_symbols=not no_symbols))
 
 
 @cli.group("base64")
@@ -268,8 +282,8 @@ def json_group() -> None:
 )
 @click.option(
     "--indent",
-    default=2,
-    show_default=True,
+    default=None,
+    show_default=f"{DEFAULT_JSON_INDENT} or DEV_TOOLKIT_JSON_INDENT",
     type=JSON_INDENT_RANGE,
     help="Number of spaces for formatted output.",
 )
@@ -277,13 +291,14 @@ def json_format_command(
     text: str | None,
     input_file: Path | None,
     output_file: Path | None,
-    indent: int,
+    indent: int | None,
 ) -> None:
     """Format JSON from direct text or a file."""
     logger.info("Formatting JSON")
     source_text = read_text_argument_or_file(text, input_file)
     try:
-        formatted_json = format_json(source_text, indent=indent)
+        resolved_indent = indent if indent is not None else get_json_indent_default()
+        formatted_json = format_json(source_text, indent=resolved_indent)
     except ValueError as error:
         raise click.ClickException(str(error)) from error
 

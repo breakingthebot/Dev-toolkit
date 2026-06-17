@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.0] - 2026-06-17
+
+### Added
+
+- Add `DEV_TOOLKIT_PASSWORD_LENGTH` for default password command length.
+- Add `DEV_TOOLKIT_JSON_INDENT` for default JSON formatting indentation.
+- Add validated environment default helpers and tests.
+- Document optional environment defaults in README and `.env.example`.
+
 ## [0.6.0] - 2026-06-17
 
 ### Added

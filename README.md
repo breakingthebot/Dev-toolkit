@@ -20,9 +20,12 @@ pip install -e ".[dev]"
 
 ## Environment Variables
 
-No environment variables are required.
+No environment variables are required. Optional defaults can be set for repeated local use:
 
-See `.env.example` for the empty template used by this project.
+- `DEV_TOOLKIT_PASSWORD_LENGTH`: default password length, from `8` to `128`.
+- `DEV_TOOLKIT_JSON_INDENT`: default JSON format indentation, from `0` to `8`.
+
+See `.env.example` for the template used by this project.
 
 ## Running Locally
 
@@ -43,6 +46,16 @@ dev-toolkit json validate --input-file data.json
 dev-toolkit timestamp 1718064000
 dev-toolkit timestamp --to-unix "2024-06-11T00:00:00+00:00"
 dev-toolkit timestamp --to-unix --milliseconds "2001-09-09T01:46:40Z"
+```
+
+Optional environment defaults are used only when the matching command flag is omitted:
+
+```powershell
+$env:DEV_TOOLKIT_PASSWORD_LENGTH = "32"
+dev-toolkit password
+
+$env:DEV_TOOLKIT_JSON_INDENT = "4"
+dev-toolkit json format '{\"a\":{\"b\":1}}'
 ```
 
 ## Shell Completion
@@ -75,14 +88,16 @@ Not deployed. This is a local command-line tool.
 
 ## Architecture Notes
 
-This is a small terminal toolkit that groups common developer utilities behind predictable commands while keeping each utility isolated in its own module so it is easy to test and extend. The Click layer in `src/dev_toolkit/cli.py` handles command parsing, file option handling, shell-completion-compatible command metadata, practical help examples, and user-facing errors. The actual work lives in service modules under `src/dev_toolkit/services/`, which keeps encoding, hashing, JSON parsing, password generation, bidirectional timestamp conversion, and UUID generation independently testable.
+This is a small terminal toolkit that groups common developer utilities behind predictable commands while keeping each utility isolated in its own module so it is easy to test and extend. The Click layer in `src/dev_toolkit/cli.py` handles command parsing, file option handling, shell-completion-compatible command metadata, practical help examples, environment-backed defaults, and user-facing errors. The actual work lives in service modules under `src/dev_toolkit/services/`, while validated default configuration lives under `src/dev_toolkit/config/`.
 
 ## Notes
 
 - The CLI entry point is `dev-toolkit`.
 - Password generation uses Python's `secrets` module.
+- Password length can default from `DEV_TOOLKIT_PASSWORD_LENGTH`.
 - Base64 commands accept direct text or file input with optional file output.
 - Hash commands support SHA-256 and SHA-512 for direct text, files, and checksum verification.
 - JSON commands support formatting, minification, validation, file input, and file output.
+- JSON indentation can default from `DEV_TOOLKIT_JSON_INDENT`.
 - Timestamp conversion accepts Unix timestamps in seconds or milliseconds, returns UTC ISO 8601 output, and can convert ISO 8601 datetimes back to Unix seconds or milliseconds.
 - Shell completion setup is documented for PowerShell, Bash, and Zsh.
