@@ -15,13 +15,15 @@ from dev_toolkit.services.file_service import (
     get_file_size,
 )
 
+FIXTURE_DIR = Path(__file__).parent / "fixtures"
+HELLO_FILE = FIXTURE_DIR / "hello.txt"
+TWO_LINES_FILE = FIXTURE_DIR / "two_lines.txt"
+WORDS_FILE = FIXTURE_DIR / "words.txt"
 
-def test_get_file_size_returns_bytes(tmp_path: Path) -> None:
+
+def test_get_file_size_returns_bytes() -> None:
     """Confirm file size returns raw byte count."""
-    input_file = tmp_path / "plain.txt"
-    input_file.write_text("hello", encoding="utf-8")
-
-    assert get_file_size(input_file) == 5
+    assert get_file_size(HELLO_FILE) == 6
 
 
 def test_format_file_size_returns_bytes() -> None:
@@ -34,25 +36,16 @@ def test_format_file_size_returns_kilobytes() -> None:
     assert format_file_size(1536) == "1.50 KB"
 
 
-def test_count_lines_returns_line_count(tmp_path: Path) -> None:
+def test_count_lines_returns_line_count() -> None:
     """Confirm line count reads UTF-8 text files."""
-    input_file = tmp_path / "plain.txt"
-    input_file.write_text("first\nsecond\n", encoding="utf-8")
-
-    assert count_lines(input_file) == 2
+    assert count_lines(TWO_LINES_FILE) == 2
 
 
-def test_count_words_returns_word_count(tmp_path: Path) -> None:
+def test_count_words_returns_word_count() -> None:
     """Confirm word count splits on whitespace."""
-    input_file = tmp_path / "plain.txt"
-    input_file.write_text("hello world\nagain", encoding="utf-8")
-
-    assert count_words(input_file) == 3
+    assert count_words(WORDS_FILE) == 3
 
 
-def test_count_characters_returns_character_count(tmp_path: Path) -> None:
+def test_count_characters_returns_character_count() -> None:
     """Confirm character count reads UTF-8 text."""
-    input_file = tmp_path / "plain.txt"
-    input_file.write_text("hello", encoding="utf-8")
-
-    assert count_characters(input_file) == 5
+    assert count_characters(HELLO_FILE) == 6

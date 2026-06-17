@@ -1,0 +1,6 @@
+# MANIFEST.in
+# Includes non-Python test fixtures in source distributions.
+# Connects to: tests/fixtures/
+# Created: 2026-06-17
+
+recursive-include tests/fixtures *.txt

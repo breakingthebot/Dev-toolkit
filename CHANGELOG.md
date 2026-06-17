@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.2] - 2026-06-17
+
+### Fixed
+
+- Stop configuring pytest to create a repo-local temp directory because it can create cross-user permission issues on Windows.
+- Keep stale `.pytest-tmp/` folders ignored so older local generated test folders do not affect Git status.
+- Update file service tests to use committed fixtures instead of pytest temporary paths.
+
 ## [0.9.1] - 2026-06-17
 
 ### Fixed
