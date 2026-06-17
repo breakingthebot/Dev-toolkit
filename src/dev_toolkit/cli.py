@@ -24,6 +24,10 @@ from dev_toolkit.services.base64_service import (
     encode_base64,
     encode_base64_bytes,
 )
+from dev_toolkit.services.clipboard_service import (
+    read_clipboard_text,
+    write_clipboard_text,
+)
 from dev_toolkit.services.file_service import (
     count_characters,
     count_lines,
@@ -112,6 +116,11 @@ def base64_group() -> None:
 @base64_group.command("encode")
 @click.argument("text", required=False)
 @click.option(
+    "--clipboard-input",
+    is_flag=True,
+    help="Read text from the clipboard instead of TEXT or --input-file.",
+)
+@click.option(
     "--input-file",
     "-i",
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
@@ -123,27 +132,48 @@ def base64_group() -> None:
     type=click.Path(dir_okay=False, writable=True, path_type=Path),
     help="Write encoded output to a file instead of stdout.",
 )
+@click.option(
+    "--clipboard-output",
+    is_flag=True,
+    help="Copy encoded output to the clipboard instead of stdout.",
+)
 def base64_encode_command(
     text: str | None,
+    clipboard_input: bool,
     input_file: Path | None,
     output_file: Path | None,
+    clipboard_output: bool,
 ) -> None:
     """Encode text or file content as base64."""
     logger.info("Encoding base64 text")
-    if text is None and input_file is None:
-        raise click.UsageError("Provide TEXT or --input-file.")
+    if output_file is not None and clipboard_output:
+        raise click.UsageError("Use either --output-file or --clipboard-output, not both.")
 
-    if text is not None and input_file is not None:
-        raise click.UsageError("Use either TEXT or --input-file, not both.")
-
-    encoded_text = (
-        encode_base64_bytes(input_file.read_bytes())
-        if input_file is not None
-        else encode_base64(text or "")
-    )
+    try:
+        if input_file is not None:
+            if text is not None or clipboard_input:
+                raise click.UsageError("Use only one input source.")
+            encoded_text = encode_base64_bytes(input_file.read_bytes())
+        else:
+            source_text = read_text_argument_file_or_clipboard(
+                text=text,
+                input_file=None,
+                clipboard_input=clipboard_input,
+            )
+            encoded_text = encode_base64(source_text)
+    except RuntimeError as error:
+        raise click.ClickException(str(error)) from error
 
     if output_file is not None:
         output_file.write_text(encoded_text, encoding="utf-8")
+        return
+
+    if clipboard_output:
+        write_text_to_file_clipboard_or_echo(
+            text=encoded_text,
+            output_file=None,
+            clipboard_output=True,
+        )
         return
 
     click.echo(encoded_text)
@@ -151,6 +181,11 @@ def base64_encode_command(
 
 @base64_group.command("decode")
 @click.argument("text", required=False)
+@click.option(
+    "--clipboard-input",
+    is_flag=True,
+    help="Read base64 text from the clipboard instead of TEXT or --input-file.",
+)
 @click.option(
     "--input-file",
     "-i",
@@ -163,23 +198,27 @@ def base64_encode_command(
     type=click.Path(dir_okay=False, writable=True, path_type=Path),
     help="Write decoded bytes to a file instead of stdout.",
 )
+@click.option(
+    "--clipboard-output",
+    is_flag=True,
+    help="Copy decoded UTF-8 text to the clipboard instead of stdout.",
+)
 def base64_decode_command(
     text: str | None,
+    clipboard_input: bool,
     input_file: Path | None,
     output_file: Path | None,
+    clipboard_output: bool,
 ) -> None:
     """Decode base64 text or file content."""
     logger.info("Decoding base64 text")
-    if text is None and input_file is None:
-        raise click.UsageError("Provide TEXT or --input-file.")
+    if output_file is not None and clipboard_output:
+        raise click.UsageError("Use either --output-file or --clipboard-output, not both.")
 
-    if text is not None and input_file is not None:
-        raise click.UsageError("Use either TEXT or --input-file, not both.")
-
-    source_text = (
-        input_file.read_text(encoding="utf-8")
-        if input_file is not None
-        else text or ""
+    source_text = read_text_argument_file_or_clipboard(
+        text=text,
+        input_file=input_file,
+        clipboard_input=clipboard_input,
     )
 
     try:
@@ -187,8 +226,13 @@ def base64_decode_command(
             output_file.write_bytes(decode_base64_bytes(source_text.strip()))
             return
 
-        click.echo(decode_base64(source_text.strip()))
-    except ValueError as error:
+        decoded_text = decode_base64(source_text.strip())
+        write_text_to_file_clipboard_or_echo(
+            text=decoded_text,
+            output_file=None,
+            clipboard_output=clipboard_output,
+        )
+    except (RuntimeError, ValueError) as error:
         raise click.ClickException(str(error)) from error
 
 
@@ -342,6 +386,11 @@ def json_group() -> None:
 @json_group.command("format")
 @click.argument("text", required=False)
 @click.option(
+    "--clipboard-input",
+    is_flag=True,
+    help="Read JSON from the clipboard instead of TEXT or --input-file.",
+)
+@click.option(
     "--input-file",
     "-i",
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
@@ -354,6 +403,11 @@ def json_group() -> None:
     help="Write formatted JSON to a file instead of stdout.",
 )
 @click.option(
+    "--clipboard-output",
+    is_flag=True,
+    help="Copy formatted JSON to the clipboard instead of stdout.",
+)
+@click.option(
     "--indent",
     default=None,
     show_default=f"{DEFAULT_JSON_INDENT} or DEV_TOOLKIT_JSON_INDENT",
@@ -362,24 +416,34 @@ def json_group() -> None:
 )
 def json_format_command(
     text: str | None,
+    clipboard_input: bool,
     input_file: Path | None,
     output_file: Path | None,
+    clipboard_output: bool,
     indent: int | None,
 ) -> None:
     """Format JSON from direct text or a file."""
     logger.info("Formatting JSON")
-    source_text = read_text_argument_or_file(text, input_file)
+    if output_file is not None and clipboard_output:
+        raise click.UsageError("Use either --output-file or --clipboard-output, not both.")
+
+    source_text = read_text_argument_file_or_clipboard(text, input_file, clipboard_input)
     try:
         resolved_indent = indent if indent is not None else get_json_indent_default()
         formatted_json = format_json(source_text, indent=resolved_indent)
-    except ValueError as error:
+    except (RuntimeError, ValueError) as error:
         raise click.ClickException(str(error)) from error
 
-    write_text_or_echo(formatted_json, output_file)
+    write_text_to_file_clipboard_or_echo(formatted_json, output_file, clipboard_output)
 
 
 @json_group.command("minify")
 @click.argument("text", required=False)
+@click.option(
+    "--clipboard-input",
+    is_flag=True,
+    help="Read JSON from the clipboard instead of TEXT or --input-file.",
+)
 @click.option(
     "--input-file",
     "-i",
@@ -392,37 +456,56 @@ def json_format_command(
     type=click.Path(dir_okay=False, writable=True, path_type=Path),
     help="Write minified JSON to a file instead of stdout.",
 )
+@click.option(
+    "--clipboard-output",
+    is_flag=True,
+    help="Copy minified JSON to the clipboard instead of stdout.",
+)
 def json_minify_command(
     text: str | None,
+    clipboard_input: bool,
     input_file: Path | None,
     output_file: Path | None,
+    clipboard_output: bool,
 ) -> None:
     """Minify JSON from direct text or a file."""
     logger.info("Minifying JSON")
-    source_text = read_text_argument_or_file(text, input_file)
+    if output_file is not None and clipboard_output:
+        raise click.UsageError("Use either --output-file or --clipboard-output, not both.")
+
+    source_text = read_text_argument_file_or_clipboard(text, input_file, clipboard_input)
     try:
         minified_json = minify_json(source_text)
-    except ValueError as error:
+    except (RuntimeError, ValueError) as error:
         raise click.ClickException(str(error)) from error
 
-    write_text_or_echo(minified_json, output_file)
+    write_text_to_file_clipboard_or_echo(minified_json, output_file, clipboard_output)
 
 
 @json_group.command("validate")
 @click.argument("text", required=False)
+@click.option(
+    "--clipboard-input",
+    is_flag=True,
+    help="Read JSON from the clipboard instead of TEXT or --input-file.",
+)
 @click.option(
     "--input-file",
     "-i",
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
     help="Read JSON from a file instead of the text argument.",
 )
-def json_validate_command(text: str | None, input_file: Path | None) -> None:
+def json_validate_command(
+    text: str | None,
+    clipboard_input: bool,
+    input_file: Path | None,
+) -> None:
     """Validate JSON from direct text or a file."""
     logger.info("Validating JSON")
-    source_text = read_text_argument_or_file(text, input_file)
+    source_text = read_text_argument_file_or_clipboard(text, input_file, clipboard_input)
     try:
         validate_json(source_text)
-    except ValueError as error:
+    except (RuntimeError, ValueError) as error:
         raise click.ClickException(str(error)) from error
 
     click.echo("OK")
@@ -487,6 +570,44 @@ def read_text_argument_or_file(text: str | None, input_file: Path | None) -> str
     return text or ""
 
 
+def read_text_argument_file_or_clipboard(
+    text: str | None,
+    input_file: Path | None,
+    clipboard_input: bool,
+) -> str:
+    """Read text from an argument, file, or clipboard.
+
+    Parameters:
+        text: Optional direct text argument.
+        input_file: Optional path to read.
+        clipboard_input: Whether to read from the clipboard.
+
+    Returns:
+        Text read from the selected source.
+
+    Raises:
+        click.UsageError: If the source selection is invalid.
+        RuntimeError: If clipboard input is unavailable.
+    """
+    selected_sources = sum(
+        source_selected
+        for source_selected in (text is not None, input_file is not None, clipboard_input)
+    )
+    if selected_sources == 0:
+        raise click.UsageError("Provide TEXT, --input-file, or --clipboard-input.")
+
+    if selected_sources > 1:
+        raise click.UsageError("Use only one input source.")
+
+    if clipboard_input:
+        try:
+            return read_clipboard_text()
+        except RuntimeError as error:
+            raise click.ClickException(str(error)) from error
+
+    return read_text_argument_or_file(text, input_file)
+
+
 def write_text_or_echo(text: str, output_file: Path | None) -> None:
     """Write text to an output file or stdout.
 
@@ -499,6 +620,39 @@ def write_text_or_echo(text: str, output_file: Path | None) -> None:
     """
     if output_file is not None:
         output_file.write_text(text, encoding="utf-8")
+        return
+
+    click.echo(text)
+
+
+def write_text_to_file_clipboard_or_echo(
+    text: str,
+    output_file: Path | None,
+    clipboard_output: bool,
+) -> None:
+    """Write text to a file, clipboard, or stdout.
+
+    Parameters:
+        text: Text to write.
+        output_file: Optional output file path.
+        clipboard_output: Whether to copy the text to the clipboard.
+
+    Returns:
+        None.
+
+    Raises:
+        RuntimeError: If clipboard output is unavailable.
+    """
+    if output_file is not None:
+        output_file.write_text(text, encoding="utf-8")
+        return
+
+    if clipboard_output:
+        try:
+            write_clipboard_text(text)
+        except RuntimeError as error:
+            raise click.ClickException(str(error)) from error
+        click.echo("Copied to clipboard.")
         return
 
     click.echo(text)

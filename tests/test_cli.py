@@ -14,7 +14,7 @@ def test_cli_version_outputs_package_version() -> None:
     """Confirm the CLI exposes a stable version flag."""
     result = CliRunner().invoke(cli, ["--version"])
     assert result.exit_code == 0
-    assert "0.9.2" in result.output
+    assert "0.10.0" in result.output
 
 
 def test_cli_help_includes_examples() -> None:
@@ -104,7 +104,34 @@ def test_cli_base64_encode_rejects_missing_input() -> None:
     """Confirm encode reports a usage error when no input is provided."""
     result = CliRunner().invoke(cli, ["base64", "encode"])
     assert result.exit_code != 0
-    assert "Provide TEXT or --input-file" in result.output
+    assert "Provide TEXT, --input-file, or --clipboard-input" in result.output
+
+
+def test_cli_base64_encode_reads_clipboard(monkeypatch) -> None:
+    """Confirm base64 encode can read input from the clipboard."""
+    monkeypatch.setattr(
+        "dev_toolkit.services.clipboard_service.pyperclip.paste",
+        lambda: "hello",
+    )
+    result = CliRunner().invoke(cli, ["base64", "encode", "--clipboard-input"])
+    assert result.exit_code == 0
+    assert result.output.strip() == "aGVsbG8="
+
+
+def test_cli_base64_encode_writes_clipboard(monkeypatch) -> None:
+    """Confirm base64 encode can copy output to the clipboard."""
+    copied_text: list[str] = []
+    monkeypatch.setattr(
+        "dev_toolkit.services.clipboard_service.pyperclip.copy",
+        copied_text.append,
+    )
+    result = CliRunner().invoke(
+        cli,
+        ["base64", "encode", "hello", "--clipboard-output"],
+    )
+    assert result.exit_code == 0
+    assert result.output.strip() == "Copied to clipboard."
+    assert copied_text == ["aGVsbG8="]
 
 
 def test_cli_file_size_outputs_bytes() -> None:
@@ -219,6 +246,33 @@ def test_cli_json_format_outputs_pretty_json() -> None:
     assert result.output.strip() == '{\n  "a": 1,\n  "b": 2\n}'
 
 
+def test_cli_json_format_reads_clipboard(monkeypatch) -> None:
+    """Confirm JSON format can read input from the clipboard."""
+    monkeypatch.setattr(
+        "dev_toolkit.services.clipboard_service.pyperclip.paste",
+        lambda: '{"b":2,"a":1}',
+    )
+    result = CliRunner().invoke(cli, ["json", "format", "--clipboard-input"])
+    assert result.exit_code == 0
+    assert result.output.strip() == '{\n  "a": 1,\n  "b": 2\n}'
+
+
+def test_cli_json_minify_writes_clipboard(monkeypatch) -> None:
+    """Confirm JSON minify can copy output to the clipboard."""
+    copied_text: list[str] = []
+    monkeypatch.setattr(
+        "dev_toolkit.services.clipboard_service.pyperclip.copy",
+        copied_text.append,
+    )
+    result = CliRunner().invoke(
+        cli,
+        ["json", "minify", '{"b":2,"a":1}', "--clipboard-output"],
+    )
+    assert result.exit_code == 0
+    assert result.output.strip() == "Copied to clipboard."
+    assert copied_text == ['{"a":1,"b":2}']
+
+
 def test_cli_json_format_uses_environment_indent() -> None:
     """Confirm JSON format uses the configured default indentation."""
     result = CliRunner().invoke(
@@ -313,7 +367,7 @@ def test_cli_json_format_rejects_missing_input() -> None:
     """Confirm JSON format reports a usage error when no input is provided."""
     result = CliRunner().invoke(cli, ["json", "format"])
     assert result.exit_code != 0
-    assert "Provide TEXT or --input-file" in result.output
+    assert "Provide TEXT, --input-file, or --clipboard-input" in result.output
 
 
 def test_cli_timestamp_converts_unix_to_iso() -> None:

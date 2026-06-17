@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.10.0] - 2026-06-17
+
+### Added
+
+- Add clipboard input and output support for text-oriented base64 commands.
+- Add clipboard input and output support for JSON format and minify commands.
+- Add clipboard input support for JSON validation.
+- Add clipboard service and CLI tests with mocked clipboard access.
+
 ## [0.9.2] - 2026-06-17
 
 ### Fixed

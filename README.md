@@ -35,6 +35,8 @@ dev-toolkit uuid
 dev-toolkit password --length 24
 dev-toolkit base64 encode "hello"
 dev-toolkit base64 decode "aGVsbG8="
+dev-toolkit base64 encode --clipboard-input
+dev-toolkit base64 encode "hello" --clipboard-output
 dev-toolkit base64 encode --input-file plain.txt --output-file encoded.txt
 dev-toolkit base64 decode --input-file encoded.txt --output-file plain.txt
 dev-toolkit file size README.md
@@ -45,6 +47,8 @@ dev-toolkit hash text sha256 "hello"
 dev-toolkit hash file sha512 plain.txt
 dev-toolkit hash verify sha256 "<expected-digest>" plain.txt
 dev-toolkit json format '{\"b\":2,\"a\":1}'
+dev-toolkit json format --clipboard-input
+dev-toolkit json minify '{ \"b\": 2, \"a\": 1 }' --clipboard-output
 dev-toolkit json minify '{ \"b\": 2, \"a\": 1 }'
 dev-toolkit json validate --input-file data.json
 dev-toolkit timestamp 1718064000
@@ -114,9 +118,11 @@ This is a small terminal toolkit that groups common developer utilities behind p
 - Password generation uses Python's `secrets` module.
 - Password length can default from `DEV_TOOLKIT_PASSWORD_LENGTH`.
 - Base64 commands accept direct text or file input with optional file output.
+- Base64 commands support clipboard input and output for text workflows.
 - File commands inspect byte size, human-readable size, line count, and text statistics.
 - Hash commands support SHA-256 and SHA-512 for direct text, files, and checksum verification.
 - JSON commands support formatting, minification, validation, file input, and file output.
+- JSON commands support clipboard input and output for text workflows.
 - JSON indentation can default from `DEV_TOOLKIT_JSON_INDENT`.
 - Timestamp conversion accepts Unix timestamps in seconds or milliseconds, returns UTC ISO 8601 output, and can convert ISO 8601 datetimes back to Unix seconds or milliseconds.
 - Shell completion setup is documented for PowerShell, Bash, and Zsh.
