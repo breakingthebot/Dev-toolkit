@@ -54,6 +54,9 @@ dev-toolkit json validate --input-file data.json
 dev-toolkit timestamp 1718064000
 dev-toolkit timestamp --to-unix "2024-06-11T00:00:00+00:00"
 dev-toolkit timestamp --to-unix --milliseconds "2001-09-09T01:46:40Z"
+dev-toolkit url encode "hello world"
+dev-toolkit url encode --component "hello world"
+dev-toolkit url decode "hello+world"
 ```
 
 Optional environment defaults are used only when the matching command flag is omitted:
@@ -83,6 +86,7 @@ dev-toolkit file --help
 dev-toolkit hash --help
 dev-toolkit json --help
 dev-toolkit timestamp --help
+dev-toolkit url --help
 ```
 
 ## Testing
@@ -125,4 +129,5 @@ This is a small terminal toolkit that groups common developer utilities behind p
 - JSON commands support clipboard input and output for text workflows.
 - JSON indentation can default from `DEV_TOOLKIT_JSON_INDENT`.
 - Timestamp conversion accepts Unix timestamps in seconds or milliseconds, returns UTC ISO 8601 output, and can convert ISO 8601 datetimes back to Unix seconds or milliseconds.
+- URL commands support query-style encoding, component percent encoding, decoding, file IO, and clipboard IO.
 - Shell completion setup is documented for PowerShell, Bash, and Zsh.

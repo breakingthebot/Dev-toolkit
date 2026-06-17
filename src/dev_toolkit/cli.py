@@ -42,6 +42,7 @@ from dev_toolkit.services.timestamp_service import (
     convert_datetime_to_timestamp,
     convert_timestamp,
 )
+from dev_toolkit.services.url_service import decode_url_text, encode_url_text
 from dev_toolkit.services.uuid_service import generate_uuid
 
 logger = logging.getLogger(__name__)
@@ -543,6 +544,114 @@ def timestamp_command(value: str, to_unix: bool, milliseconds: bool) -> None:
         click.echo(convert_timestamp(value))
     except ValueError as error:
         raise click.ClickException(str(error)) from error
+
+
+@cli.group("url")
+def url_group() -> None:
+    """Encode or decode URL text.
+
+    Examples:
+
+      dev-toolkit url encode "hello world"
+
+      dev-toolkit url encode --component "hello world"
+
+      dev-toolkit url decode "hello+world"
+    """
+
+
+@url_group.command("encode")
+@click.argument("text", required=False)
+@click.option(
+    "--clipboard-input",
+    is_flag=True,
+    help="Read text from the clipboard instead of TEXT or --input-file.",
+)
+@click.option(
+    "--input-file",
+    "-i",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="Read text from a file instead of the text argument.",
+)
+@click.option(
+    "--output-file",
+    "-o",
+    type=click.Path(dir_okay=False, writable=True, path_type=Path),
+    help="Write encoded URL text to a file instead of stdout.",
+)
+@click.option(
+    "--clipboard-output",
+    is_flag=True,
+    help="Copy encoded URL text to the clipboard instead of stdout.",
+)
+@click.option(
+    "--component",
+    is_flag=True,
+    help="Encode spaces as %20 instead of +.",
+)
+def url_encode_command(
+    text: str | None,
+    clipboard_input: bool,
+    input_file: Path | None,
+    output_file: Path | None,
+    clipboard_output: bool,
+    component: bool,
+) -> None:
+    """Encode URL text from direct text, file, or clipboard."""
+    logger.info("Encoding URL text")
+    if output_file is not None and clipboard_output:
+        raise click.UsageError("Use either --output-file or --clipboard-output, not both.")
+
+    source_text = read_text_argument_file_or_clipboard(text, input_file, clipboard_input)
+    encoded_text = encode_url_text(source_text, component=component)
+    write_text_to_file_clipboard_or_echo(encoded_text, output_file, clipboard_output)
+
+
+@url_group.command("decode")
+@click.argument("text", required=False)
+@click.option(
+    "--clipboard-input",
+    is_flag=True,
+    help="Read URL text from the clipboard instead of TEXT or --input-file.",
+)
+@click.option(
+    "--input-file",
+    "-i",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="Read URL text from a file instead of the text argument.",
+)
+@click.option(
+    "--output-file",
+    "-o",
+    type=click.Path(dir_okay=False, writable=True, path_type=Path),
+    help="Write decoded text to a file instead of stdout.",
+)
+@click.option(
+    "--clipboard-output",
+    is_flag=True,
+    help="Copy decoded text to the clipboard instead of stdout.",
+)
+@click.option(
+    "--component",
+    is_flag=True,
+    help="Decode without converting + to a space.",
+)
+def url_decode_command(
+    text: str | None,
+    clipboard_input: bool,
+    input_file: Path | None,
+    output_file: Path | None,
+    clipboard_output: bool,
+    component: bool,
+) -> None:
+    """Decode URL text from direct text, file, or clipboard."""
+    logger.info("Decoding URL text")
+    if output_file is not None and clipboard_output:
+        raise click.UsageError("Use either --output-file or --clipboard-output, not both.")
+
+    source_text = read_text_argument_file_or_clipboard(text, input_file, clipboard_input)
+    decoded_text = decode_url_text(source_text, component=component)
+    write_text_to_file_clipboard_or_echo(decoded_text, output_file, clipboard_output)
 
 
 def read_text_argument_or_file(text: str | None, input_file: Path | None) -> str:

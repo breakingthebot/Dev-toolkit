@@ -14,7 +14,7 @@ def test_cli_version_outputs_package_version() -> None:
     """Confirm the CLI exposes a stable version flag."""
     result = CliRunner().invoke(cli, ["--version"])
     assert result.exit_code == 0
-    assert "0.10.0" in result.output
+    assert "0.11.0" in result.output
 
 
 def test_cli_help_includes_examples() -> None:
@@ -395,3 +395,76 @@ def test_cli_timestamp_converts_iso_to_unix_milliseconds() -> None:
     )
     assert result.exit_code == 0
     assert result.output.strip() == "1000000000000"
+
+
+def test_cli_url_encode_outputs_encoded_text() -> None:
+    """Confirm URL encode command prints encoded text."""
+    result = CliRunner().invoke(cli, ["url", "encode", "hello world"])
+    assert result.exit_code == 0
+    assert result.output.strip() == "hello+world"
+
+
+def test_cli_url_encode_component_outputs_percent_encoded_text() -> None:
+    """Confirm URL encode component mode prints percent-encoded text."""
+    result = CliRunner().invoke(cli, ["url", "encode", "--component", "hello world"])
+    assert result.exit_code == 0
+    assert result.output.strip() == "hello%20world"
+
+
+def test_cli_url_decode_outputs_decoded_text() -> None:
+    """Confirm URL decode command prints decoded text."""
+    result = CliRunner().invoke(cli, ["url", "decode", "hello+world"])
+    assert result.exit_code == 0
+    assert result.output.strip() == "hello world"
+
+
+def test_cli_url_encode_reads_and_writes_files() -> None:
+    """Confirm URL encode can read input files and write output files."""
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        with open("input.txt", "w", encoding="utf-8") as input_file:
+            input_file.write("hello world")
+
+        result = runner.invoke(
+            cli,
+            [
+                "url",
+                "encode",
+                "--input-file",
+                "input.txt",
+                "--output-file",
+                "output.txt",
+            ],
+        )
+        with open("output.txt", encoding="utf-8") as output_file:
+            encoded_text = output_file.read()
+
+    assert result.exit_code == 0
+    assert encoded_text == "hello+world"
+
+
+def test_cli_url_decode_reads_clipboard(monkeypatch) -> None:
+    """Confirm URL decode can read input from the clipboard."""
+    monkeypatch.setattr(
+        "dev_toolkit.services.clipboard_service.pyperclip.paste",
+        lambda: "hello+world",
+    )
+    result = CliRunner().invoke(cli, ["url", "decode", "--clipboard-input"])
+    assert result.exit_code == 0
+    assert result.output.strip() == "hello world"
+
+
+def test_cli_url_encode_writes_clipboard(monkeypatch) -> None:
+    """Confirm URL encode can copy output to the clipboard."""
+    copied_text: list[str] = []
+    monkeypatch.setattr(
+        "dev_toolkit.services.clipboard_service.pyperclip.copy",
+        copied_text.append,
+    )
+    result = CliRunner().invoke(
+        cli,
+        ["url", "encode", "hello world", "--clipboard-output"],
+    )
+    assert result.exit_code == 0
+    assert result.output.strip() == "Copied to clipboard."
+    assert copied_text == ["hello+world"]

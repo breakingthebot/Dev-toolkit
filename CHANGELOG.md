@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.11.0] - 2026-06-17
+
+### Added
+
+- Add `dev-toolkit url encode` for query-style URL encoding.
+- Add `dev-toolkit url encode --component` for percent-encoded URL components.
+- Add `dev-toolkit url decode` for URL decoding.
+- Add file and clipboard input/output support for URL commands.
+- Add URL service and CLI tests.
+
 ## [0.10.0] - 2026-06-17
 
 ### Added
