@@ -14,7 +14,7 @@ def test_cli_version_outputs_package_version() -> None:
     """Confirm the CLI exposes a stable version flag."""
     result = CliRunner().invoke(cli, ["--version"])
     assert result.exit_code == 0
-    assert "0.11.0" in result.output
+    assert "0.12.0" in result.output
 
 
 def test_cli_help_includes_examples() -> None:
@@ -375,6 +375,41 @@ def test_cli_timestamp_converts_unix_to_iso() -> None:
     result = CliRunner().invoke(cli, ["timestamp", "0"])
     assert result.exit_code == 0
     assert result.output.strip() == "1970-01-01T00:00:00+00:00"
+
+
+def test_cli_system_info_outputs_core_diagnostics() -> None:
+    """Confirm system info command prints core diagnostics."""
+    result = CliRunner().invoke(cli, ["system", "info"])
+    assert result.exit_code == 0
+    assert "cwd:" in result.output
+    assert "platform:" in result.output
+    assert "python:" in result.output
+    assert "executable:" in result.output
+
+
+def test_cli_system_cwd_outputs_working_directory() -> None:
+    """Confirm system cwd command prints current directory."""
+    result = CliRunner().invoke(cli, ["system", "cwd"])
+    assert result.exit_code == 0
+    assert result.output.strip()
+
+
+def test_cli_system_env_outputs_value() -> None:
+    """Confirm system env command prints set environment variables."""
+    result = CliRunner().invoke(
+        cli,
+        ["system", "env", "DEV_TOOLKIT_TEST_ENV"],
+        env={"DEV_TOOLKIT_TEST_ENV": "available"},
+    )
+    assert result.exit_code == 0
+    assert result.output.strip() == "available"
+
+
+def test_cli_system_env_reports_missing_value() -> None:
+    """Confirm system env command reports missing variables."""
+    result = CliRunner().invoke(cli, ["system", "env", "DEV_TOOLKIT_TEST_ENV"])
+    assert result.exit_code != 0
+    assert "not set" in result.output
 
 
 def test_cli_timestamp_converts_iso_to_unix() -> None:

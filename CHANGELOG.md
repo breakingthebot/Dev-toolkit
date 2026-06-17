@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.12.0] - 2026-06-17
+
+### Added
+
+- Add `dev-toolkit system info` for core system diagnostics.
+- Add `dev-toolkit system cwd` for current working directory output.
+- Add `dev-toolkit system platform` for platform summary output.
+- Add `dev-toolkit system python` for Python version and executable output.
+- Add `dev-toolkit system env` for selected environment variable diagnostics.
+- Add system service and CLI tests.
+
 ## [0.11.0] - 2026-06-17
 
 ### Added

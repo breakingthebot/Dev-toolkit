@@ -38,6 +38,14 @@ from dev_toolkit.services.file_service import (
 from dev_toolkit.services.hash_service import hash_file, hash_text, verify_checksum
 from dev_toolkit.services.json_service import format_json, minify_json, validate_json
 from dev_toolkit.services.password_service import generate_password
+from dev_toolkit.services.system_service import (
+    get_current_directory,
+    get_environment_value,
+    get_platform_summary,
+    get_python_executable,
+    get_python_version,
+    get_system_info,
+)
 from dev_toolkit.services.timestamp_service import (
     convert_datetime_to_timestamp,
     convert_timestamp,
@@ -368,6 +376,61 @@ def hash_verify_command(
         return
 
     raise click.ClickException(f"Checksum mismatch. Actual digest: {actual_digest}")
+
+
+@cli.group("system")
+def system_group() -> None:
+    """Show local system diagnostics.
+
+    Examples:
+
+      dev-toolkit system info
+
+      dev-toolkit system cwd
+
+      dev-toolkit system env PATH
+    """
+
+
+@system_group.command("info")
+def system_info_command() -> None:
+    """Print core system diagnostics."""
+    logger.info("Reading system diagnostics")
+    for key, value in get_system_info().items():
+        click.echo(f"{key}: {value}")
+
+
+@system_group.command("cwd")
+def system_cwd_command() -> None:
+    """Print the current working directory."""
+    logger.info("Reading current working directory")
+    click.echo(get_current_directory())
+
+
+@system_group.command("platform")
+def system_platform_command() -> None:
+    """Print the platform summary."""
+    logger.info("Reading platform summary")
+    click.echo(get_platform_summary())
+
+
+@system_group.command("python")
+def system_python_command() -> None:
+    """Print the Python version and executable."""
+    logger.info("Reading Python diagnostics")
+    click.echo(f"python: {get_python_version()}")
+    click.echo(f"executable: {get_python_executable()}")
+
+
+@system_group.command("env")
+@click.argument("name")
+def system_env_command(name: str) -> None:
+    """Print one environment variable value."""
+    logger.info("Reading environment variable")
+    try:
+        click.echo(get_environment_value(name))
+    except ValueError as error:
+        raise click.ClickException(str(error)) from error
 
 
 @cli.group("json")
