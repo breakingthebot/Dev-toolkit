@@ -1,5 +1,5 @@
 # .github/workflows/ci.yml
-# Runs automated tests for pull requests and branch pushes.
+# Runs automated tests and packaging checks for pull requests and branch pushes.
 # Connects to: pyproject.toml, tests/
 # Created: 2026-06-12
 
@@ -31,3 +31,6 @@ jobs:
 
       - name: Run tests
         run: pytest
+
+      - name: Build distributions
+        run: python -m build

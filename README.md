@@ -87,6 +87,16 @@ dev-toolkit timestamp --help
 venv\Scripts\python.exe -m pytest
 ```
 
+## Release Check
+
+Build the source distribution and wheel before tagging a release:
+
+```powershell
+venv\Scripts\python.exe -m build
+```
+
+The generated artifacts are written to `dist/`, which is intentionally ignored by Git.
+
 ## Deployed
 
 Not deployed. This is a local command-line tool.
@@ -98,6 +108,7 @@ This is a small terminal toolkit that groups common developer utilities behind p
 ## Notes
 
 - The CLI entry point is `dev-toolkit`.
+- CI runs both the test suite and Python package build check.
 - Password generation uses Python's `secrets` module.
 - Password length can default from `DEV_TOOLKIT_PASSWORD_LENGTH`.
 - Base64 commands accept direct text or file input with optional file output.
