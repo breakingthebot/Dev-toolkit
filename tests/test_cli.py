@@ -14,7 +14,7 @@ def test_cli_version_outputs_package_version() -> None:
     """Confirm the CLI exposes a stable version flag."""
     result = CliRunner().invoke(cli, ["--version"])
     assert result.exit_code == 0
-    assert "0.7.0" in result.output
+    assert "0.8.0" in result.output
 
 
 def test_cli_help_includes_examples() -> None:
@@ -105,6 +105,61 @@ def test_cli_base64_encode_rejects_missing_input() -> None:
     result = CliRunner().invoke(cli, ["base64", "encode"])
     assert result.exit_code != 0
     assert "Provide TEXT or --input-file" in result.output
+
+
+def test_cli_file_size_outputs_bytes() -> None:
+    """Confirm file size command prints byte count."""
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        with open("plain.txt", "w", encoding="utf-8") as input_file:
+            input_file.write("hello")
+
+        result = runner.invoke(cli, ["file", "size", "plain.txt"])
+
+    assert result.exit_code == 0
+    assert result.output.strip() == "5"
+
+
+def test_cli_file_size_outputs_human_readable_size() -> None:
+    """Confirm file size command can print human-readable size."""
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        with open("plain.txt", "w", encoding="utf-8") as input_file:
+            input_file.write("hello")
+
+        result = runner.invoke(cli, ["file", "size", "--human", "plain.txt"])
+
+    assert result.exit_code == 0
+    assert result.output.strip() == "5 B"
+
+
+def test_cli_file_lines_outputs_line_count() -> None:
+    """Confirm file lines command prints line count."""
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        with open("plain.txt", "w", encoding="utf-8") as input_file:
+            input_file.write("first\nsecond\n")
+
+        result = runner.invoke(cli, ["file", "lines", "plain.txt"])
+
+    assert result.exit_code == 0
+    assert result.output.strip() == "2"
+
+
+def test_cli_file_stats_outputs_text_counts() -> None:
+    """Confirm file stats command prints file text statistics."""
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        with open("plain.txt", "w", encoding="utf-8") as input_file:
+            input_file.write("hello world\nagain")
+
+        result = runner.invoke(cli, ["file", "stats", "plain.txt"])
+
+    assert result.exit_code == 0
+    assert "bytes: 18" in result.output
+    assert "lines: 2" in result.output
+    assert "words: 3" in result.output
+    assert "characters: 17" in result.output
 
 
 def test_cli_hash_text_outputs_sha256_digest() -> None:

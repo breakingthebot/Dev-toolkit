@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.0] - 2026-06-17
+
+### Added
+
+- Add `dev-toolkit file size` for file byte counts.
+- Add `dev-toolkit file size --human` for readable size units.
+- Add `dev-toolkit file lines` for UTF-8 text line counts.
+- Add `dev-toolkit file stats` for byte, line, word, and character counts.
+- Add file service and CLI tests.
+
 ## [0.7.0] - 2026-06-17
 
 ### Added

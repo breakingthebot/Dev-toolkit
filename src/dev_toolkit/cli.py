@@ -24,6 +24,13 @@ from dev_toolkit.services.base64_service import (
     encode_base64,
     encode_base64_bytes,
 )
+from dev_toolkit.services.file_service import (
+    count_characters,
+    count_lines,
+    count_words,
+    format_file_size,
+    get_file_size,
+)
 from dev_toolkit.services.hash_service import hash_file, hash_text, verify_checksum
 from dev_toolkit.services.json_service import format_json, minify_json, validate_json
 from dev_toolkit.services.password_service import generate_password
@@ -183,6 +190,72 @@ def base64_decode_command(
         click.echo(decode_base64(source_text.strip()))
     except ValueError as error:
         raise click.ClickException(str(error)) from error
+
+
+@cli.group("file")
+def file_group() -> None:
+    """Inspect file size and text counts.
+
+    Examples:
+
+      dev-toolkit file size README.md
+
+      dev-toolkit file lines README.md
+
+      dev-toolkit file stats README.md
+    """
+
+
+@file_group.command("size")
+@click.argument(
+    "input_file",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+)
+@click.option(
+    "--human",
+    is_flag=True,
+    help="Print a human-readable size instead of raw bytes.",
+)
+def file_size_command(input_file: Path, human: bool) -> None:
+    """Print file size in bytes or human-readable units."""
+    logger.info("Reading file size")
+    size_bytes = get_file_size(input_file)
+    if human:
+        click.echo(format_file_size(size_bytes))
+        return
+
+    click.echo(size_bytes)
+
+
+@file_group.command("lines")
+@click.argument(
+    "input_file",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+)
+def file_lines_command(input_file: Path) -> None:
+    """Print the number of lines in a text file."""
+    logger.info("Counting file lines")
+    try:
+        click.echo(count_lines(input_file))
+    except UnicodeDecodeError as error:
+        raise click.ClickException("Input file must be UTF-8 text.") from error
+
+
+@file_group.command("stats")
+@click.argument(
+    "input_file",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+)
+def file_stats_command(input_file: Path) -> None:
+    """Print size, line, word, and character counts for a text file."""
+    logger.info("Reading file statistics")
+    try:
+        click.echo(f"bytes: {get_file_size(input_file)}")
+        click.echo(f"lines: {count_lines(input_file)}")
+        click.echo(f"words: {count_words(input_file)}")
+        click.echo(f"characters: {count_characters(input_file)}")
+    except UnicodeDecodeError as error:
+        raise click.ClickException("Input file must be UTF-8 text.") from error
 
 
 @cli.group("hash")
