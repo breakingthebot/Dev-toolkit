@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0] - 2026-06-17
+
+### Added
+
+- Add `dev-toolkit timestamp --to-unix` for ISO 8601 datetime to Unix timestamp conversion.
+- Add `dev-toolkit timestamp --to-unix --milliseconds` for Unix millisecond output.
+- Add timestamp service and CLI tests for reverse conversion, timezone offsets, and `Z` suffix input.
+
 ## [0.4.0] - 2026-06-12
 
 ### Added

@@ -41,6 +41,8 @@ dev-toolkit json format '{\"b\":2,\"a\":1}'
 dev-toolkit json minify '{ \"b\": 2, \"a\": 1 }'
 dev-toolkit json validate --input-file data.json
 dev-toolkit timestamp 1718064000
+dev-toolkit timestamp --to-unix "2024-06-11T00:00:00+00:00"
+dev-toolkit timestamp --to-unix --milliseconds "2001-09-09T01:46:40Z"
 ```
 
 ## Testing
@@ -55,7 +57,7 @@ Not deployed. This is a local command-line tool.
 
 ## Architecture Notes
 
-This is a small terminal toolkit that groups common developer utilities behind predictable commands while keeping each utility isolated in its own module so it is easy to test and extend. The Click layer in `src/dev_toolkit/cli.py` only handles command parsing, file option handling, and user-facing errors. The actual work lives in service modules under `src/dev_toolkit/services/`, which keeps encoding, hashing, JSON parsing, password generation, timestamp conversion, and UUID generation independently testable.
+This is a small terminal toolkit that groups common developer utilities behind predictable commands while keeping each utility isolated in its own module so it is easy to test and extend. The Click layer in `src/dev_toolkit/cli.py` only handles command parsing, file option handling, and user-facing errors. The actual work lives in service modules under `src/dev_toolkit/services/`, which keeps encoding, hashing, JSON parsing, password generation, bidirectional timestamp conversion, and UUID generation independently testable.
 
 ## Notes
 
@@ -64,4 +66,4 @@ This is a small terminal toolkit that groups common developer utilities behind p
 - Base64 commands accept direct text or file input with optional file output.
 - Hash commands support SHA-256 and SHA-512 for direct text, files, and checksum verification.
 - JSON commands support formatting, minification, validation, file input, and file output.
-- Timestamp conversion accepts Unix timestamps in seconds or milliseconds and returns UTC ISO 8601 output.
+- Timestamp conversion accepts Unix timestamps in seconds or milliseconds, returns UTC ISO 8601 output, and can convert ISO 8601 datetimes back to Unix seconds or milliseconds.

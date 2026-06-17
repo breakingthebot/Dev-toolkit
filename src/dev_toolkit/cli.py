@@ -21,7 +21,10 @@ from dev_toolkit.services.base64_service import (
 from dev_toolkit.services.hash_service import hash_file, hash_text, verify_checksum
 from dev_toolkit.services.json_service import format_json, minify_json, validate_json
 from dev_toolkit.services.password_service import generate_password
-from dev_toolkit.services.timestamp_service import convert_timestamp
+from dev_toolkit.services.timestamp_service import (
+    convert_datetime_to_timestamp,
+    convert_timestamp,
+)
 from dev_toolkit.services.uuid_service import generate_uuid
 
 logger = logging.getLogger(__name__)
@@ -303,10 +306,24 @@ def json_validate_command(text: str | None, input_file: Path | None) -> None:
 
 @cli.command("timestamp")
 @click.argument("value")
-def timestamp_command(value: str) -> None:
-    """Convert a Unix timestamp to an ISO 8601 UTC datetime."""
+@click.option(
+    "--to-unix",
+    is_flag=True,
+    help="Treat VALUE as an ISO 8601 datetime and convert it to a Unix timestamp.",
+)
+@click.option(
+    "--milliseconds",
+    is_flag=True,
+    help="Return Unix milliseconds when used with --to-unix.",
+)
+def timestamp_command(value: str, to_unix: bool, milliseconds: bool) -> None:
+    """Convert between Unix timestamps and ISO 8601 UTC datetimes."""
     logger.info("Converting timestamp")
     try:
+        if to_unix:
+            click.echo(convert_datetime_to_timestamp(value, milliseconds=milliseconds))
+            return
+
         click.echo(convert_timestamp(value))
     except ValueError as error:
         raise click.ClickException(str(error)) from error

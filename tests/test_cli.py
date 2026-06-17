@@ -14,7 +14,7 @@ def test_cli_version_outputs_package_version() -> None:
     """Confirm the CLI exposes a stable version flag."""
     result = CliRunner().invoke(cli, ["--version"])
     assert result.exit_code == 0
-    assert "0.4.0" in result.output
+    assert "0.5.0" in result.output
 
 
 def test_cli_base64_encode_command_outputs_encoded_text() -> None:
@@ -199,3 +199,30 @@ def test_cli_json_format_rejects_missing_input() -> None:
     result = CliRunner().invoke(cli, ["json", "format"])
     assert result.exit_code != 0
     assert "Provide TEXT or --input-file" in result.output
+
+
+def test_cli_timestamp_converts_unix_to_iso() -> None:
+    """Confirm timestamp command keeps Unix-to-ISO behavior."""
+    result = CliRunner().invoke(cli, ["timestamp", "0"])
+    assert result.exit_code == 0
+    assert result.output.strip() == "1970-01-01T00:00:00+00:00"
+
+
+def test_cli_timestamp_converts_iso_to_unix() -> None:
+    """Confirm timestamp command converts ISO datetimes to Unix seconds."""
+    result = CliRunner().invoke(
+        cli,
+        ["timestamp", "--to-unix", "1970-01-01T00:00:00+00:00"],
+    )
+    assert result.exit_code == 0
+    assert result.output.strip() == "0"
+
+
+def test_cli_timestamp_converts_iso_to_unix_milliseconds() -> None:
+    """Confirm timestamp command converts ISO datetimes to Unix milliseconds."""
+    result = CliRunner().invoke(
+        cli,
+        ["timestamp", "--to-unix", "--milliseconds", "2001-09-09T01:46:40Z"],
+    )
+    assert result.exit_code == 0
+    assert result.output.strip() == "1000000000000"
